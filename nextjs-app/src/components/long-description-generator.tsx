@@ -1,0 +1,141 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import { useLongDescriptionStore } from '@/stores/long-description-store';
+import { FileUpload } from '@/components/file-upload';
+import { FileInfo } from '@/components/file-info';
+import { ApiKeyInput } from '@/components/api-key-input';
+import { SettingsSection } from '@/components/settings-section';
+import { ProcessingProgress } from '@/components/processing-progress';
+import { ResultsSection } from '@/components/results-section';
+import { PreviewModal } from '@/components/preview-modal';
+import { ErrorSection } from '@/components/error-section';
+import type { LongDescriptionSettings } from '@/types';
+
+export function LongDescriptionGenerator() {
+  const [apiKey, setApiKey] = useState('');
+  const [settings, setSettings] = useState<LongDescriptionSettings>({
+    justifyText: false,
+    addImages: false,
+    useLinkPhrases: false,
+    linkPhrases: '',
+    tone: 'neutral',
+    customToneExample: '',
+  });
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const {
+    file,
+    fileName,
+    stats,
+    processingState,
+    currentProduct,
+    totalProducts,
+    estimatedTimeRemaining,
+    logEntries,
+    results,
+    previewItems,
+    error,
+    loadFile,
+    resetFile,
+    startProcessing,
+    cancelProcessing,
+    downloadFile,
+    reset,
+  } = useLongDescriptionStore();
+
+  const handleFileSelect = useCallback((selectedFile: File) => {
+    loadFile(selectedFile);
+  }, [loadFile]);
+
+  const handleStartProcessing = useCallback(() => {
+    startProcessing(apiKey, settings);
+  }, [apiKey, settings, startProcessing]);
+
+  const handlePreview = useCallback(() => {
+    setPreviewOpen(true);
+  }, []);
+
+  // Error state
+  if (error && processingState !== 'processing') {
+    return (
+      <ErrorSection message={error} onReset={reset} />
+    );
+  }
+
+  // Processing state
+  if (processingState === 'processing') {
+    return (
+      <ProcessingProgress
+        current={currentProduct}
+        total={totalProducts}
+        estimatedTimeRemaining={estimatedTimeRemaining}
+        logEntries={logEntries}
+        onCancel={cancelProcessing}
+      />
+    );
+  }
+
+  // Results state
+  if (processingState === 'completed' || processingState === 'cancelled') {
+    return (
+      <>
+        <ResultsSection
+          results={results}
+          mode="long"
+          onDownload={downloadFile}
+          onPreview={handlePreview}
+          onReset={reset}
+        />
+        <PreviewModal
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+          items={previewItems}
+          mode="long"
+        />
+      </>
+    );
+  }
+
+  // Idle state - no file
+  if (!file) {
+    return (
+      <FileUpload onFileSelect={handleFileSelect} />
+    );
+  }
+
+  // Idle state - file loaded
+  return (
+    <>
+      {stats && (
+        <FileInfo
+          fileName={fileName}
+          stats={stats}
+          mode="long"
+          onRemove={resetFile}
+        />
+      )}
+
+      <ApiKeyInput value={apiKey} onChange={setApiKey} />
+
+      <SettingsSection
+        mode="long"
+        settings={settings}
+        onChange={setSettings}
+      />
+
+      {/* Process Button */}
+      <button
+        onClick={handleStartProcessing}
+        disabled={!stats?.processable || !apiKey}
+        className="w-full mt-4 py-4 px-6 btn-process text-white rounded-xl text-base font-semibold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Spustit generovani ({stats?.processable || 0} produktu)
+      </button>
+    </>
+  );
+}
