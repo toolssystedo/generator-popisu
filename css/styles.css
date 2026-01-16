@@ -1193,9 +1193,108 @@ body {
     color: #ef4444;
 }
 
+.result-info .result-value {
+    color: var(--brand-green);
+}
+
+:root.dark .result-info .result-value {
+    color: var(--brand-green-lighter);
+}
+
 .result-label {
     font-size: 0.75rem;
     color: var(--text-muted);
+}
+
+/* Results grid with 5 columns for long descriptions */
+.results-grid-5 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 640px) {
+    .results-grid-5 {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 640px) and (max-width: 800px) {
+    .results-grid-5 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .results-grid-5 .result-item:nth-child(4),
+    .results-grid-5 .result-item:nth-child(5) {
+        grid-column: span 1;
+    }
+}
+
+/* File stats grid with 4 columns */
+.file-stats-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 640px) {
+    .file-stats-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Wide modal for long description preview */
+.modal-content-wide {
+    max-width: 64rem;
+}
+
+/* Long description preview styles */
+.preview-item-long {
+    margin-bottom: 1.5rem;
+}
+
+.preview-columns-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.preview-html-content {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    max-height: 20rem;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.preview-html-content p {
+    margin-bottom: 0.75rem;
+}
+
+.preview-html-content p:last-child {
+    margin-bottom: 0;
+}
+
+.preview-html-content ul {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.preview-html-content li {
+    margin-bottom: 0.25rem;
+}
+
+.preview-html-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+    color: var(--text-primary);
+}
+
+.preview-html-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 0.75rem 0;
 }
 
 /* =================================
@@ -1409,4 +1508,120 @@ body {
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
+}
+
+/* =================================
+   MODE SWITCHER
+   ================================= */
+
+.mode-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem 1rem;
+    max-width: 56rem;
+    margin: 0 auto;
+}
+
+.mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.mode-btn:hover {
+    border-color: var(--brand-green-lighter);
+    background-color: var(--brand-green-50);
+    color: var(--text-secondary);
+}
+
+:root.dark .mode-btn:hover {
+    background-color: #2d3d3c;
+}
+
+.mode-btn.active {
+    border-color: var(--brand-green);
+    background-color: var(--brand-green);
+    color: white;
+}
+
+.mode-btn.active:hover {
+    background-color: var(--brand-green-light);
+    border-color: var(--brand-green-light);
+    color: white;
+}
+
+.mode-icon {
+    font-size: 1.125rem;
+}
+
+.mode-text {
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .mode-switcher {
+        padding: 0.5rem 1rem 0.75rem;
+    }
+
+    .mode-btn {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .mode-icon {
+        font-size: 1rem;
+    }
+}
+
+/* =================================
+   PLACEHOLDER CONTENT
+   ================================= */
+
+.placeholder-content {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.placeholder-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.placeholder-icon svg {
+    width: 4rem;
+    height: 4rem;
+    color: var(--brand-green-lighter);
+    opacity: 0.6;
+}
+
+:root.dark .placeholder-icon svg {
+    color: var(--brand-green-lighter);
+    opacity: 0.5;
+}
+
+.placeholder-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.placeholder-text {
+    font-size: 1rem;
+    color: var(--text-muted);
+    max-width: 32rem;
+    margin: 0 auto;
+    line-height: 1.6;
 }

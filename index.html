@@ -31,11 +31,24 @@
                     <span class="icon-dark">🌙</span>
                 </button>
             </div>
+            <!-- Mode Switcher -->
+            <div class="mode-switcher">
+                <button id="modeShort" class="mode-btn active" data-mode="short">
+                    <span class="mode-icon">📝</span>
+                    <span class="mode-text">Krátké popisy</span>
+                </button>
+                <button id="modeLong" class="mode-btn" data-mode="long">
+                    <span class="mode-icon">📄</span>
+                    <span class="mode-text">Dlouhé popisy</span>
+                </button>
+            </div>
         </header>
 
         <!-- Main Content -->
         <main class="main">
             <div class="container">
+                <!-- Short Description Mode Content -->
+                <div id="shortModeContent">
                 <!-- Info Card -->
                 <div class="info-card">
                     <h3 class="info-card-title">
@@ -360,6 +373,327 @@
                         <button id="errorResetBtn" class="reset-btn">Zkusit znovu</button>
                     </div>
                 </div>
+                </div>
+
+                <!-- Long Description Mode Content -->
+                <div id="longModeContent" class="hidden">
+                <!-- Info Card -->
+                <div class="info-card">
+                    <h3 class="info-card-title">
+                        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Jak to funguje?
+                    </h3>
+
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <p class="step-title">Nahrajte XLSX export ze Shoptetu</p>
+                                <p class="step-desc">Soubor musí obsahovat sloupce: code, name, description, shortDescription</p>
+                                <p class="step-desc">Volitelně může obsahovat sloupec image s URL obrázku produktu</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <p class="step-title">Zadejte API klíč (Anthropic)</p>
+                                <p class="step-desc">API klíč získáte na console.anthropic.com</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <p class="step-title">Nastavte možnosti generování</p>
+                                <p class="step-desc">Zvolte tón, zda přidávat obrázky a další nastavení</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <p class="step-title">Spusťte automatické zpracování</p>
+                                <p class="step-desc">AI vygeneruje dlouhé popisy z krátkých popisů a názvů produktů</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <p class="step-title">Stáhněte upravený soubor</p>
+                                <p class="step-desc">Originální popis bude uložen do sloupce originalDescription</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Card -->
+                <div class="card">
+                    <!-- Upload Zone -->
+                    <div id="longUploadZone" class="upload-zone">
+                        <input type="file" id="longFileInput" accept=".xlsx,.xls" hidden>
+                        <div class="upload-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                        </div>
+                        <div class="upload-text">
+                            <p class="upload-title">Přetáhněte XLSX soubor sem</p>
+                            <p class="upload-subtitle">nebo <span class="upload-link">klikněte pro výběr</span></p>
+                        </div>
+                        <div class="upload-formats">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>Podporované formáty: .xlsx, .xls</span>
+                        </div>
+                    </div>
+
+                    <!-- File Info (hidden by default) -->
+                    <div id="longFileInfo" class="file-info hidden">
+                        <div class="file-info-header">
+                            <div class="file-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div class="file-details">
+                                <p class="file-name" id="longFileName">soubor.xlsx</p>
+                                <p class="file-stats" id="longFileStats">Načítám...</p>
+                            </div>
+                            <button id="longRemoveFile" class="remove-file-btn" title="Odebrat soubor">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="file-stats-grid file-stats-grid-4">
+                            <div class="stat-item">
+                                <span class="stat-value" id="longTotalProducts">0</span>
+                                <span class="stat-label">Celkem produktů</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="longWithShortDesc">0</span>
+                                <span class="stat-label">S krátkým popisem</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="longWithImage">0</span>
+                                <span class="stat-label">S obrázkem</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="longProcessable">0</span>
+                                <span class="stat-label">Ke zpracování</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Key Section -->
+                    <div id="longApiKeySection" class="api-key-section hidden">
+                        <label for="longApiKeyInput" class="api-key-label">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                            Anthropic API klíč
+                        </label>
+                        <div class="api-key-input-wrapper">
+                            <input type="password" id="longApiKeyInput" class="api-key-input" placeholder="sk-ant-api03-...">
+                            <button id="longToggleApiKey" class="toggle-api-key" title="Zobrazit/skrýt">
+                                <svg class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="api-key-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="longSaveApiKey" checked>
+                                <span>Zapamatovat v prohlížeči</span>
+                            </label>
+                            <a href="https://console.anthropic.com/" target="_blank" class="api-key-link">Získat API klíč</a>
+                        </div>
+                    </div>
+
+                    <!-- Settings Section -->
+                    <div id="longSettingsSection" class="settings-section hidden">
+                        <h4 class="settings-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Nastavení generování
+                        </h4>
+                        <div class="settings-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="longJustifyText">
+                                <span>Zarovnat popisy do bloku (text-align: justify)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="longAddImages">
+                                <span>Přidat obrázky do popisu (vyžaduje sloupec image)</span>
+                            </label>
+                        </div>
+
+                        <!-- Link Phrases Section -->
+                        <div class="link-phrases-section">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="longUseLinkPhrases">
+                                <span>Prolinkování frází (Slovník pojmů)</span>
+                            </label>
+                            <div id="longLinkPhrasesSection" class="link-phrases-input-section hidden">
+                                <label for="longLinkPhrasesInput" class="link-phrases-label">Fráze pro prolinkování</label>
+                                <textarea id="longLinkPhrasesInput" class="link-phrases-textarea" placeholder="Zadejte fráze oddělené čárkou, např.: Tepláky, Tenisky, Trička, Mikiny"></textarea>
+                                <p class="link-phrases-hint">Fráze budou použity v přesném tvaru pro automatické prolinkování doplňkem Slovník pojmů</p>
+                            </div>
+                        </div>
+
+                        <!-- Tone Selection -->
+                        <div class="tone-section">
+                            <h5 class="tone-title">Tón popisu</h5>
+                            <div class="tone-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="longToneSelection" value="neutral" checked>
+                                    <span class="radio-text">Neutrální</span>
+                                    <span class="radio-desc">Vyvážený, informativní styl</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="longToneSelection" value="professional">
+                                    <span class="radio-text">Profesionální</span>
+                                    <span class="radio-desc">Formální, elegantní, věcný</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="longToneSelection" value="funny">
+                                    <span class="radio-text">Vtipný</span>
+                                    <span class="radio-desc">Neformální, hravý, uvolněný</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="longToneSelection" value="custom">
+                                    <span class="radio-text">Vlastní styl</span>
+                                    <span class="radio-desc">Napodobí styl ukázkového popisu</span>
+                                </label>
+                            </div>
+                            <div id="longCustomToneSection" class="custom-tone-section hidden">
+                                <label for="longCustomToneExample" class="custom-tone-label">Ukázkový popis</label>
+                                <textarea id="longCustomToneExample" class="custom-tone-textarea" placeholder="Vložte ukázkový popis, jehož styl chcete napodobit..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Process Button -->
+                    <button id="longProcessBtn" class="process-btn hidden">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Spustit zpracování
+                    </button>
+
+                    <!-- Processing Progress -->
+                    <div id="longProcessingSection" class="processing-section hidden">
+                        <div class="progress-header">
+                            <span class="progress-title">Zpracování produktů</span>
+                            <span class="progress-percent" id="longProgressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="longProgressFill"></div>
+                        </div>
+                        <div class="progress-stats">
+                            <span id="longProgressCurrent">0</span> / <span id="longProgressTotal">0</span> produktů
+                            <span class="progress-time" id="longProgressTime"></span>
+                        </div>
+                        <div class="progress-log" id="longProgressLog">
+                            <p class="log-entry">Připravuji zpracování...</p>
+                        </div>
+                        <button id="longCancelBtn" class="cancel-btn">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Zrušit zpracování
+                        </button>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="longResultsSection" class="results-section hidden">
+                        <div class="results-header">
+                            <svg class="results-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3>Zpracování dokončeno</h3>
+                        </div>
+
+                        <div class="results-grid results-grid-5">
+                            <div class="result-item result-success">
+                                <span class="result-value" id="longResultSuccess">0</span>
+                                <span class="result-label">Úspěšně zpracováno</span>
+                            </div>
+                            <div class="result-item result-info">
+                                <span class="result-value" id="longResultAvgLength">0</span>
+                                <span class="result-label">Průměrná délka (znaků)</span>
+                            </div>
+                            <div class="result-item result-info">
+                                <span class="result-value" id="longResultWithImages">0</span>
+                                <span class="result-label">S obrázky</span>
+                            </div>
+                            <div class="result-item result-skipped">
+                                <span class="result-value" id="longResultSkipped">0</span>
+                                <span class="result-label">Přeskočeno</span>
+                            </div>
+                            <div class="result-item result-error">
+                                <span class="result-value" id="longResultErrors">0</span>
+                                <span class="result-label">Chyby</span>
+                            </div>
+                        </div>
+
+                        <button id="longDownloadBtn" class="download-btn">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Stáhnout upravený XLSX
+                        </button>
+
+                        <button id="longPreviewBtn" class="preview-btn">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Zobrazit náhled změn
+                        </button>
+
+                        <button id="longResetBtn" class="reset-btn">
+                            Zpracovat další soubor
+                        </button>
+                    </div>
+
+                    <!-- Preview Modal -->
+                    <div id="longPreviewModal" class="modal hidden">
+                        <div class="modal-content modal-content-wide">
+                            <div class="modal-header">
+                                <h3>Náhled změn</h3>
+                                <button id="longClosePreview" class="modal-close">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="longPreviewContent">
+                                <!-- Preview items will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Section -->
+                    <div id="longErrorSection" class="error-section hidden">
+                        <div class="error-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <p class="error-message" id="longErrorMessage">Došlo k chybě</p>
+                        <button id="longErrorResetBtn" class="reset-btn">Zkusit znovu</button>
+                    </div>
+                </div>
+                </div>
             </div>
         </main>
 
@@ -375,5 +709,9 @@
     <script src="js/excel.js"></script>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/long-description-ui.js"></script>
+    <script src="js/long-description-api.js"></script>
+    <script src="js/long-description-app.js"></script>
+    <script src="js/mode-switcher.js"></script>
 </body>
 </html>
