@@ -13,7 +13,7 @@ import {
   downloadLongDescFile,
 } from '@/lib/excel';
 import { generateLongDescription, REQUEST_DELAY } from '@/lib/api/long-description';
-import { applyJustifyAlignment, sleep, validateApiKey, stripHtml, hasImage } from '@/lib/api/anthropic';
+import { applyJustifyAlignment, sleep, stripHtml, hasImage } from '@/lib/api/anthropic';
 
 interface LongDescriptionState {
   // File data
@@ -44,7 +44,7 @@ interface LongDescriptionState {
   // Actions
   loadFile: (file: File) => Promise<void>;
   resetFile: () => void;
-  startProcessing: (apiKey: string, settings: LongDescriptionSettings) => Promise<void>;
+  startProcessing: (settings: LongDescriptionSettings) => Promise<void>;
   cancelProcessing: () => void;
   downloadFile: () => void;
   reset: () => void;
@@ -108,14 +108,8 @@ export const useLongDescriptionStore = create<LongDescriptionState>((set, get) =
   },
 
   // Start processing
-  startProcessing: async (apiKey: string, settings: LongDescriptionSettings) => {
+  startProcessing: async (settings: LongDescriptionSettings) => {
     const state = get();
-
-    // Validate API key
-    if (!validateApiKey(apiKey)) {
-      set({ error: 'Zadejte prosím platný Anthropic API klíč.' });
-      return;
-    }
 
     // Validate data
     if (!state.data || state.data.length === 0) {
@@ -182,7 +176,6 @@ export const useLongDescriptionStore = create<LongDescriptionState>((set, get) =
       // Generate description via API
       const result = await generateLongDescription(
         product,
-        apiKey,
         settings,
         (waitSeconds, attempt, maxAttempts) => {
           get().addLogEntry(`Rate limit - čekám ${waitSeconds}s (pokus ${attempt}/${maxAttempts})...`, 'warning');

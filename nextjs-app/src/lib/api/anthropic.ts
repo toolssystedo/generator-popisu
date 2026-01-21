@@ -1,10 +1,5 @@
 import type { APIResponse } from '@/types';
 
-// API configuration
-const API_BASE_URL = 'https://api.anthropic.com/v1/messages';
-const API_VERSION = '2023-06-01';
-const MODEL = 'claude-sonnet-4-20250514';
-
 // Rate limiting
 export const REQUEST_DELAY = 2500; // ms between requests
 export const REQUEST_DELAY_LONG = 3000; // ms for long descriptions
@@ -16,14 +11,6 @@ const BASE_RETRY_DELAY = 5000; // ms
  */
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Validate API key format
- */
-export function validateApiKey(apiKey: string): boolean {
-  if (!apiKey || typeof apiKey !== 'string') return false;
-  return apiKey.trim().length > 20;
 }
 
 /**
@@ -62,7 +49,6 @@ export function hasImage(html: string): boolean {
 }
 
 interface CallAPIOptions {
-  apiKey: string;
   systemPrompt: string;
   userMessage: string;
   maxTokens: number;
@@ -70,33 +56,28 @@ interface CallAPIOptions {
 }
 
 /**
- * Call Anthropic API with retry logic
+ * Call server-side API route with retry logic
  */
 export async function callAPI(
   options: CallAPIOptions,
   retryCount = 0
 ): Promise<APIResponse> {
-  const { apiKey, systemPrompt, userMessage, maxTokens, onRateLimitWait } = options;
+  const { systemPrompt, userMessage, maxTokens, onRateLimitWait } = options;
 
   try {
-    const response = await fetch(API_BASE_URL, {
+    const response = await fetch('/api/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': API_VERSION,
-        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: maxTokens,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: userMessage
-        }]
+        systemPrompt,
+        userMessage,
+        maxTokens,
       })
     });
+
+    const data = await response.json();
 
     // Handle rate limiting
     if (response.status === 429) {
@@ -118,54 +99,15 @@ export async function callAPI(
       }
     }
 
-    // Handle other errors
+    // Return the response from server
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error?.message || `HTTP Error: ${response.status}`;
-
-      if (response.status === 401) {
-        return {
-          success: false,
-          error: 'Neplatný API klíč. Zkontrolujte prosím váš Anthropic API klíč.'
-        };
-      }
-
       return {
         success: false,
-        error: errorMessage
+        error: data.error || `HTTP Error: ${response.status}`
       };
     }
 
-    const data = await response.json();
-    let text = data.content?.[0]?.text;
-
-    if (!text) {
-      return {
-        success: false,
-        error: 'Prázdná odpověď od API'
-      };
-    }
-
-    // Check for [NELZE_ZPRACOVAT] marker
-    if (text.includes('[NELZE_ZPRACOVAT]')) {
-      return {
-        success: false,
-        error: 'AI nemohla vygenerovat popis z poskytnutých informací'
-      };
-    }
-
-    // Clean up the response - remove markdown code blocks if present
-    text = text.trim();
-    if (text.startsWith('```html')) {
-      text = text.replace(/^```html\s*/, '').replace(/\s*```$/, '');
-    } else if (text.startsWith('```')) {
-      text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-
-    return {
-      success: true,
-      description: text.trim()
-    };
+    return data;
 
   } catch (error) {
     // Network error - retry

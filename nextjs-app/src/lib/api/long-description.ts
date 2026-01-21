@@ -51,11 +51,35 @@ POVINNÉ elementy:
 - \`<h3>\` pro nadpisy sekcí (pokud jsou)
 
 **Pravidla pro obrázky:**
-Pokud je v zadání uvedeno \`[OBRAZEK: URL]\`, vlož obrázek do popisu takto:
+Pokud jsou v zadání uvedeny obrázky ve formátu \`[OBRAZKY: URL1, URL2, ...]\`, vlož je do popisu podle zvoleného rozložení:
+
+**Rozložení 1 obrázek na řádek** (\`[ROZLOZENI_OBRAZKU: 1]\`):
 \`\`\`html
-<p style="text-align: center;"><img src="URL" alt="Název produktu" style="max-width: 100%;"></p>
+<p><img src="URL" alt="Název produktu" style="width: 100%;" /></p>
 \`\`\`
-Umísti obrázky mezi sekce nebo za hook, NE na začátek nebo úplný konec.
+
+**Rozložení 2 obrázky na řádek** (\`[ROZLOZENI_OBRAZKU: 2]\`):
+\`\`\`html
+<p>
+  <img src="URL1" alt="Název produktu" style="width: 50%; display: inline-block;" />
+  <img src="URL2" alt="Název produktu" style="width: 50%; display: inline-block;" />
+</p>
+\`\`\`
+
+**Rozložení 3 obrázky na řádek** (\`[ROZLOZENI_OBRAZKU: 3]\`):
+\`\`\`html
+<p>
+  <img src="URL1" alt="Název produktu" style="width: 33%; display: inline-block;" />
+  <img src="URL2" alt="Název produktu" style="width: 33%; display: inline-block;" />
+  <img src="URL3" alt="Název produktu" style="width: 33%; display: inline-block;" />
+</p>
+\`\`\`
+
+**Pravidla:**
+- Seskup obrázky podle zvoleného rozložení (po 1, 2 nebo 3)
+- Pokud zbyde lichý počet (např. 5 obrázků při rozložení 2), poslední obrázek bude sám s width: 100%
+- Umísti obrázky mezi sekce nebo za hook, NE na začátek nebo úplný konec
+- Každá skupina obrázků je v samostatném \`<p>\` tagu
 
 **NEPOUŽÍVEJ:**
 - Inline styly kromě obrázků a zarovnání textu
@@ -106,7 +130,6 @@ Vrať POUZE HTML kód dlouhého popisu.
  */
 export async function generateLongDescription(
   product: Product,
-  apiKey: string,
   settings: LongDescriptionSettings,
   onRateLimitWait?: (waitSeconds: number, attempt: number, maxAttempts: number) => void
 ): Promise<APIResponse> {
@@ -135,9 +158,15 @@ export async function generateLongDescription(
     userMessage += `[FRAZE_PRO_PROLINKOVÁNÍ: ${settings.linkPhrases.trim()}]\n\n`;
   }
 
-  // Add image if available and setting is enabled
-  if (settings.addImages && product.image) {
-    userMessage += `[OBRAZEK: ${product.image}]\n\n`;
+  // Add images if available and setting is enabled
+  // Use _allImages which contains all images from image, image2, image3... columns
+  const allImages = product._allImages || product.image || '';
+  if (settings.addImages && allImages) {
+    const images = allImages.split(',').map(url => url.trim()).filter(url => url.length > 0);
+    if (images.length > 0) {
+      userMessage += `[OBRAZKY: ${images.join(', ')}]\n`;
+      userMessage += `[ROZLOZENI_OBRAZKU: ${settings.imageLayout}]\n\n`;
+    }
   }
 
   userMessage += `Název produktu: ${product.name || 'Bez názvu'}
@@ -149,7 +178,6 @@ Stávající dlouhý popis:
 ${product.description || '(prázdný)'}`;
 
   return callAPI({
-    apiKey,
     systemPrompt: SYSTEM_PROMPT,
     userMessage,
     maxTokens: 4096,

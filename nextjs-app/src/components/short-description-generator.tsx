@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import { useShortDescriptionStore } from '@/stores/short-description-store';
 import { FileUpload } from '@/components/file-upload';
 import { FileInfo } from '@/components/file-info';
-import { ApiKeyInput } from '@/components/api-key-input';
 import { SettingsSection } from '@/components/settings-section';
 import { ProcessingProgress } from '@/components/processing-progress';
 import { ResultsSection } from '@/components/results-section';
@@ -13,7 +12,6 @@ import { ErrorSection } from '@/components/error-section';
 import type { ShortDescriptionSettings } from '@/types';
 
 export function ShortDescriptionGenerator() {
-  const [apiKey, setApiKey] = useState('');
   const [settings, setSettings] = useState<ShortDescriptionSettings>({
     justifyText: false,
     addBulletPoints: false,
@@ -49,8 +47,8 @@ export function ShortDescriptionGenerator() {
   }, [loadFile]);
 
   const handleStartProcessing = useCallback(() => {
-    startProcessing(apiKey, settings);
-  }, [apiKey, settings, startProcessing]);
+    startProcessing(settings);
+  }, [settings, startProcessing]);
 
   const handlePreview = useCallback(() => {
     setPreviewOpen(true);
@@ -116,8 +114,6 @@ export function ShortDescriptionGenerator() {
         />
       )}
 
-      <ApiKeyInput value={apiKey} onChange={setApiKey} />
-
       <SettingsSection
         mode="short"
         settings={settings}
@@ -127,7 +123,7 @@ export function ShortDescriptionGenerator() {
       {/* Process Button */}
       <button
         onClick={handleStartProcessing}
-        disabled={!stats?.processable || !apiKey}
+        disabled={!stats?.processable}
         className="w-full mt-4 py-4 px-6 btn-process text-white rounded-xl text-base font-semibold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

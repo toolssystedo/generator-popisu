@@ -5,6 +5,8 @@ export interface Product {
   description: string;
   shortDescription: string;
   image?: string;
+  // Combined images from all image columns (image, image2, image3...) for processing only
+  _allImages?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _originalRow?: any[];
 }
@@ -62,6 +64,9 @@ export interface LongPreviewItem {
 // Tone options
 export type ToneOption = 'neutral' | 'professional' | 'funny' | 'custom';
 
+// Image layout options
+export type ImageLayoutOption = 1 | 2 | 3;
+
 // Settings for short description generation
 export interface ShortDescriptionSettings {
   justifyText: boolean;
@@ -76,6 +81,7 @@ export interface ShortDescriptionSettings {
 export interface LongDescriptionSettings {
   justifyText: boolean;
   addImages: boolean;
+  imageLayout: ImageLayoutOption;
   useLinkPhrases: boolean;
   linkPhrases: string;
   tone: ToneOption;

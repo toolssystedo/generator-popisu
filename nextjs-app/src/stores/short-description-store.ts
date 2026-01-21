@@ -14,7 +14,7 @@ import {
   cleanText,
 } from '@/lib/excel';
 import { generateShortDescription, REQUEST_DELAY } from '@/lib/api/short-description';
-import { applyJustifyAlignment, sleep, validateApiKey } from '@/lib/api/anthropic';
+import { applyJustifyAlignment, sleep } from '@/lib/api/anthropic';
 
 interface ShortDescriptionState {
   // File data
@@ -45,7 +45,7 @@ interface ShortDescriptionState {
   // Actions
   loadFile: (file: File) => Promise<void>;
   resetFile: () => void;
-  startProcessing: (apiKey: string, settings: ShortDescriptionSettings) => Promise<void>;
+  startProcessing: (settings: ShortDescriptionSettings) => Promise<void>;
   cancelProcessing: () => void;
   downloadFile: () => void;
   reset: () => void;
@@ -108,14 +108,8 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
   },
 
   // Start processing
-  startProcessing: async (apiKey: string, settings: ShortDescriptionSettings) => {
+  startProcessing: async (settings: ShortDescriptionSettings) => {
     const state = get();
-
-    // Validate API key
-    if (!validateApiKey(apiKey)) {
-      set({ error: 'Zadejte prosím platný Anthropic API klíč.' });
-      return;
-    }
 
     // Validate data
     if (!state.data || state.data.length === 0) {
@@ -187,7 +181,6 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
         productName,
         product.description,
         product.shortDescription || '',
-        apiKey,
         settings,
         (waitSeconds, attempt, maxAttempts) => {
           get().addLogEntry(`Rate limit - čekám ${waitSeconds}s (pokus ${attempt}/${maxAttempts})...`, 'warning');

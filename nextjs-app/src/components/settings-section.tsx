@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { ShortDescriptionSettings, LongDescriptionSettings, AppMode, ToneOption } from '@/types';
+import type { ShortDescriptionSettings, LongDescriptionSettings, AppMode, ToneOption, ImageLayoutOption } from '@/types';
 
 interface ShortSettingsProps {
   mode: 'short';
@@ -22,6 +22,12 @@ const toneOptions: { value: ToneOption; label: string; description: string }[] =
   { value: 'professional', label: 'Profesionální', description: 'Formální, odborný tón' },
   { value: 'funny', label: 'Vtipný', description: 'Lehký, zábavný přístup' },
   { value: 'custom', label: 'Vlastní', description: 'Převzít styl z ukázky' },
+];
+
+const imageLayoutOptions: { value: ImageLayoutOption; label: string; description: string }[] = [
+  { value: 1, label: '1 obrázek na řádek', description: 'šířka 100%' },
+  { value: 2, label: '2 obrázky na řádek', description: 'šířka 50%' },
+  { value: 3, label: '3 obrázky na řádek', description: 'šířka 33%' },
 ];
 
 export function SettingsSection(props: SettingsSectionProps) {
@@ -49,9 +55,11 @@ export function SettingsSection(props: SettingsSectionProps) {
       });
     } else {
       const storedAddImages = localStorage.getItem('long_add_images') === 'true';
+      const storedImageLayout = parseInt(localStorage.getItem('long_image_layout') || '1', 10) as ImageLayoutOption;
       (onChange as (s: LongDescriptionSettings) => void)({
         justifyText: storedJustify,
         addImages: storedAddImages,
+        imageLayout: storedImageLayout,
         useLinkPhrases: storedUseLinkPhrases,
         linkPhrases: storedLinkPhrases,
         tone: storedTone,
@@ -69,6 +77,7 @@ export function SettingsSection(props: SettingsSectionProps) {
     const prefix = isShortMode ? '' : 'long_';
     const storageKey = key === 'addBulletPoints' ? 'add_bullet_points'
       : key === 'addImages' ? 'long_add_images'
+      : key === 'imageLayout' ? 'long_image_layout'
       : key === 'useLinkPhrases' ? `${prefix}use_link_phrases`
       : key === 'linkPhrases' ? `${prefix}link_phrases`
       : key === 'tone' ? `${prefix}tone_selection`
@@ -143,16 +152,44 @@ export function SettingsSection(props: SettingsSectionProps) {
               <span className="text-sm text-[var(--text-muted)]">(3-4 body)</span>
             </label>
           ) : (
-            <label className="flex flex-wrap items-center gap-2 p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg cursor-pointer transition-colors hover:border-[var(--brand-green-lighter)] hover:bg-[var(--brand-green-50)] dark:hover:bg-[#2d3d3c]">
-              <input
-                type="checkbox"
-                checked={(settings as LongDescriptionSettings).addImages}
-                onChange={(e) => updateSetting('addImages', e.target.checked)}
-                className="accent-[var(--brand-green)]"
-              />
-              <span className="font-medium text-[var(--text-secondary)]">Vlozit obrazky produktu</span>
-              <span className="text-sm text-[var(--text-muted)]">(pokud jsou dostupne)</span>
-            </label>
+            <>
+              <label className="flex flex-wrap items-center gap-2 p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg cursor-pointer transition-colors hover:border-[var(--brand-green-lighter)] hover:bg-[var(--brand-green-50)] dark:hover:bg-[#2d3d3c]">
+                <input
+                  type="checkbox"
+                  checked={(settings as LongDescriptionSettings).addImages}
+                  onChange={(e) => updateSetting('addImages', e.target.checked)}
+                  className="accent-[var(--brand-green)]"
+                />
+                <span className="font-medium text-[var(--text-secondary)]">Vlozit obrazky produktu</span>
+                <span className="text-sm text-[var(--text-muted)]">(pokud jsou dostupne)</span>
+              </label>
+
+              {/* Image Layout Options - only visible when addImages is checked */}
+              {(settings as LongDescriptionSettings).addImages && (
+                <div className="ml-6 mt-2 p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg">
+                  <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">Rozložení obrázků:</p>
+                  <div className="flex flex-col gap-2">
+                    {imageLayoutOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-2 cursor-pointer text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name="imageLayout"
+                          value={option.value}
+                          checked={(settings as LongDescriptionSettings).imageLayout === option.value}
+                          onChange={() => updateSetting('imageLayout', option.value)}
+                          className="accent-[var(--brand-green)]"
+                        />
+                        <span className="text-[var(--text-secondary)]">{option.label}</span>
+                        <span className="text-[var(--text-muted)]">({option.description})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

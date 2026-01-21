@@ -203,7 +203,6 @@ export async function generateShortDescription(
   productName: string,
   longDescription: string,
   existingShortDescription: string,
-  apiKey: string,
   settings: ShortDescriptionSettings,
   onRateLimitWait?: (waitSeconds: number, attempt: number, maxAttempts: number) => void
 ): Promise<APIResponse> {
@@ -248,7 +247,6 @@ ${longDescription}`;
   }
 
   const result = await callAPI({
-    apiKey,
     systemPrompt: SYSTEM_PROMPT,
     userMessage,
     maxTokens: 1024,

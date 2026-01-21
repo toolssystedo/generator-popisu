@@ -1,11 +1,26 @@
 import * as XLSX from 'xlsx';
 import type { Product, ShortDescriptionStats, LongDescriptionStats } from '@/types';
 
-// Required columns for processing
-const REQUIRED_COLUMNS = ['code', 'name', 'description', 'shortDescription'];
+// Required columns for processing (lowercase for comparison)
+const REQUIRED_COLUMNS = ['code', 'name', 'description', 'shortdescription'];
 
 // Text columns that need cleaning
 const TEXT_COLUMNS = ['description', 'shortDescription', 'name'];
+
+/**
+ * Clean header name - remove BOM, invisible characters, and normalize
+ */
+function cleanHeaderName(header: unknown): string {
+  if (header === null || header === undefined) return '';
+  let str = String(header);
+  // Remove BOM (Byte Order Mark)
+  str = str.replace(/^\uFEFF/, '');
+  // Remove zero-width characters and other invisible Unicode
+  str = str.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '');
+  // Trim whitespace
+  str = str.trim();
+  return str;
+}
 
 /**
  * Clean text from carriage returns and SheetJS escape sequences
@@ -16,6 +31,21 @@ export function cleanText(text: string | undefined | null): string {
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '')
     .replace(/_x000d_/gi, '');
+}
+
+/**
+ * Clean cell value for XLSX export - removes \r characters to prevent _x000d_ in output
+ */
+function cleanCellValue(value: unknown): string | number {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    return value
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '')
+      .replace(/_x000d_/gi, '');
+  }
+  return String(value);
 }
 
 /**
@@ -77,32 +107,57 @@ export async function readFileForShortDescriptions(file: File): Promise<{
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
-        // Convert to JSON with header row
-        let jsonData = XLSX.utils.sheet_to_json<Record<string, string>>(worksheet, { defval: '' });
+        // Convert to array format to preserve original rows
+        const jsonData = XLSX.utils.sheet_to_json<string[]>(worksheet, { header: 1 });
 
-        if (jsonData.length === 0) {
+        if (jsonData.length < 2) {
           reject(new Error('Soubor neobsahuje žádná data'));
           return;
         }
 
-        // Get column names from first row
-        const columns = Object.keys(jsonData[0]);
+        // Get column names from first row - clean and normalize
+        const rawHeaders = jsonData[0];
+        const columns = rawHeaders.map(h => cleanHeaderName(h));
+        const headers = columns.map(h => h.toLowerCase());
 
-        // Validate required columns
-        const missingColumns = REQUIRED_COLUMNS.filter(col => !columns.includes(col));
+        // Debug: log actual column names
+        console.log('[SHORT DESC] Načtené sloupce ze souboru:', columns);
+        console.log('[SHORT DESC] Sloupce (lowercase):', headers);
+        console.log('[SHORT DESC] Požadované sloupce:', REQUIRED_COLUMNS);
+
+        // Validate required columns (case-insensitive)
+        const missingColumns = REQUIRED_COLUMNS.filter(col => !headers.includes(col.toLowerCase()));
         if (missingColumns.length > 0) {
-          reject(new Error(`Chybějící sloupce: ${missingColumns.join(', ')}`));
+          console.error('[SHORT DESC] Chybějící sloupce:', missingColumns);
+          reject(new Error(`Chybějící sloupce: ${missingColumns.join(', ')}. Nalezené sloupce: ${columns.join(', ')}`));
           return;
         }
 
-        // Transform to Product array and clean
-        const products: Product[] = jsonData.map(row => cleanRow({
-          code: row.code || '',
-          name: row.name || '',
-          description: row.description || '',
-          shortDescription: row.shortDescription || '',
-          image: row.image || '',
-        }));
+        // Find column indices (case-insensitive)
+        const codeIdx = headers.indexOf('code');
+        const nameIdx = headers.indexOf('name');
+        const descIdx = headers.indexOf('description');
+        const shortDescIdx = headers.indexOf('shortdescription');
+        const imageIdx = headers.indexOf('image');
+
+        console.log('[SHORT DESC] Index sloupců - code:', codeIdx, 'name:', nameIdx, 'description:', descIdx, 'shortDescription:', shortDescIdx);
+
+        // Transform to Product array with original row preserved
+        const products: Product[] = [];
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          if (!row || row.length === 0) continue;
+
+          const product = cleanRow({
+            code: row[codeIdx] ? String(row[codeIdx]).trim() : '',
+            name: row[nameIdx] ? String(row[nameIdx]).trim() : '',
+            description: row[descIdx] ? String(row[descIdx]).trim() : '',
+            shortDescription: row[shortDescIdx] ? String(row[shortDescIdx]).trim() : '',
+            image: imageIdx >= 0 && row[imageIdx] ? String(row[imageIdx]).trim() : '',
+            _originalRow: row
+          });
+          products.push(product);
+        }
 
         // Calculate statistics
         const stats = calculateShortDescStats(products);
@@ -150,23 +205,41 @@ export async function readFileForLongDescriptions(file: File): Promise<{
           throw new Error('Soubor neobsahuje žádná data.');
         }
 
-        const headers = jsonData[0].map(h => String(h).trim().toLowerCase());
-        const columns = jsonData[0].map(h => String(h).trim());
+        // Get column names - clean and normalize
+        const rawHeaders = jsonData[0];
+        const columns = rawHeaders.map(h => cleanHeaderName(h));
+        const headers = columns.map(h => h.toLowerCase());
 
-        // Check required columns
+        // Debug: log actual column names
+        console.log('[LONG DESC] Načtené sloupce ze souboru:', columns);
+        console.log('[LONG DESC] Sloupce (lowercase):', headers);
+
+        // Check required columns (case-insensitive)
         const requiredColumns = ['code', 'name', 'description', 'shortdescription'];
-        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col.toLowerCase()));
 
         if (missingColumns.length > 0) {
-          throw new Error(`Chybějící povinné sloupce: ${missingColumns.join(', ')}`);
+          console.error('[LONG DESC] Chybějící sloupce:', missingColumns);
+          throw new Error(`Chybějící povinné sloupce: ${missingColumns.join(', ')}. Nalezené sloupce: ${columns.join(', ')}`);
         }
 
-        // Find column indices
+        // Find column indices (case-insensitive)
         const codeIdx = headers.indexOf('code');
         const nameIdx = headers.indexOf('name');
         const descIdx = headers.indexOf('description');
         const shortDescIdx = headers.indexOf('shortdescription');
         const imageIdx = headers.indexOf('image');
+
+        console.log('[LONG DESC] Index sloupců - code:', codeIdx, 'name:', nameIdx, 'description:', descIdx, 'shortDescription:', shortDescIdx);
+
+        // Find all image columns (image, image2, image3, ...) but NOT defaultImage
+        const imageColumnIndices: number[] = [];
+        headers.forEach((header, idx) => {
+          // Match 'image' or 'image2', 'image3', etc. but NOT 'defaultimage'
+          if (header === 'image' || /^image\d+$/.test(header)) {
+            imageColumnIndices.push(idx);
+          }
+        });
 
         // Process data rows
         const products: Product[] = [];
@@ -178,12 +251,27 @@ export async function readFileForLongDescriptions(file: File): Promise<{
           const row = jsonData[i];
           if (!row || row.length === 0) continue;
 
+          // Collect all images from image columns (skip defaultImage) for processing
+          const imageUrls: string[] = [];
+          for (const imgIdx of imageColumnIndices) {
+            if (row[imgIdx]) {
+              const url = String(row[imgIdx]).trim();
+              if (url.length > 0) {
+                imageUrls.push(url);
+              }
+            }
+          }
+
+          // Get original image value (just the 'image' column)
+          const originalImage = imageIdx >= 0 && row[imageIdx] ? String(row[imageIdx]).trim() : '';
+
           const product: Product = {
             code: row[codeIdx] ? String(row[codeIdx]).trim() : '',
             name: row[nameIdx] ? String(row[nameIdx]).trim() : '',
             description: row[descIdx] ? String(row[descIdx]).trim() : '',
             shortDescription: row[shortDescIdx] ? String(row[shortDescIdx]).trim() : '',
-            image: imageIdx >= 0 && row[imageIdx] ? String(row[imageIdx]).trim() : '',
+            image: originalImage,
+            _allImages: imageUrls.join(', '),
             _originalRow: row
           };
 
@@ -191,7 +279,8 @@ export async function readFileForLongDescriptions(file: File): Promise<{
           if (product.shortDescription && product.shortDescription.length > 0) {
             withShortDesc++;
           }
-          if (product.image && product.image.length > 0) {
+          // Count products with any images (using _allImages which contains all image columns)
+          if (product._allImages && product._allImages.length > 0) {
             withImage++;
           }
 
@@ -283,15 +372,31 @@ export function canProcessProductLong(product: Product): boolean {
 
 /**
  * Download processed file for short descriptions
+ * ONLY the 'shortDescription' column is modified, all other columns remain unchanged
  */
 export function downloadShortDescFile(data: Product[], columns: string[], fileName: string): void {
-  // Clean ALL text data before passing to SheetJS
-  const cleanedData = data.map(row => cleanRow(row));
+  // Build data array with original headers
+  const headers = [...columns];
+  const rows: (string | number)[][] = [headers];
+  const lowerHeaders = headers.map(h => h.toLowerCase());
+  const shortDescIdx = lowerHeaders.indexOf('shortdescription');
 
-  // Create worksheet from cleaned data
-  const worksheet = XLSX.utils.json_to_sheet(cleanedData, { header: columns });
+  for (const product of data) {
+    const row: (string | number)[] = [];
+    for (let i = 0; i < headers.length; i++) {
+      if (i === shortDescIdx) {
+        // ONLY shortDescription column is modified - clean \r characters
+        row.push(cleanCellValue(product.shortDescription || ''));
+      } else {
+        // ALL other columns use original values from _originalRow - clean \r characters
+        row.push(cleanCellValue(product._originalRow ? (product._originalRow[i] ?? '') : ''));
+      }
+    }
+    rows.push(row);
+  }
 
   // Create workbook
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
 
@@ -304,31 +409,24 @@ export function downloadShortDescFile(data: Product[], columns: string[], fileNa
 
 /**
  * Download processed file for long descriptions
+ * ONLY the 'description' column is modified, all other columns remain unchanged
  */
 export function downloadLongDescFile(data: Product[], columns: string[], fileName: string): void {
   // Build data array with original headers
   const headers = [...columns];
   const rows: (string | number)[][] = [headers];
   const lowerHeaders = headers.map(h => h.toLowerCase());
+  const descIdx = lowerHeaders.indexOf('description');
 
   for (const product of data) {
     const row: (string | number)[] = [];
     for (let i = 0; i < headers.length; i++) {
-      const header = lowerHeaders[i];
-      if (header === 'code') {
-        row.push(product.code || '');
-      } else if (header === 'name') {
-        row.push(product.name || '');
-      } else if (header === 'description') {
-        row.push(product.description || '');
-      } else if (header === 'shortdescription') {
-        row.push(product.shortDescription || '');
-      } else if (header === 'image') {
-        row.push(product.image || '');
+      if (i === descIdx) {
+        // ONLY description column is modified - clean \r characters
+        row.push(cleanCellValue(product.description || ''));
       } else {
-        // Get value from original row if available
-        const origHeader = columns.findIndex(h => h.toLowerCase() === header);
-        row.push(origHeader >= 0 && product._originalRow ? (product._originalRow[origHeader] || '') : '');
+        // ALL other columns use original values from _originalRow - clean \r characters
+        row.push(cleanCellValue(product._originalRow ? (product._originalRow[i] ?? '') : ''));
       }
     }
     rows.push(row);
