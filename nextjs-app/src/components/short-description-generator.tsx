@@ -19,6 +19,14 @@ export function ShortDescriptionGenerator() {
     linkPhrases: '',
     tone: 'neutral',
     customToneExample: '',
+    autoLinking: {
+      enabled: false,
+      brandEntries: [],
+      categoryEntries: [],
+      linkManufacturer: false,
+      linkMainCategory: false,
+      linkLowestCategory: false,
+    },
   });
   const [previewOpen, setPreviewOpen] = useState(false);
 

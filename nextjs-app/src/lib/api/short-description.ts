@@ -1,6 +1,7 @@
-import type { APIResponse, ShortDescriptionSettings } from '@/types';
+import type { APIResponse, ShortDescriptionSettings, Product } from '@/types';
 import { callAPI, REQUEST_DELAY } from './anthropic';
 import { cleanText } from '../excel';
+import { getLinksForProduct } from '@/lib/sitemap';
 
 export { REQUEST_DELAY };
 
@@ -169,6 +170,17 @@ Produkt: Pánské tepláky
 
 **Pokud žádná fráze nesouvisí s produktem, nepoužij žádnou** – lepší je popis bez fráze než nesmyslný popis.
 
+### Automatické prolinkování (VOLITELNÉ)
+
+Pokud je v zadání \`[AUTO_ODKAZY: ...]\`, vlož odkazy do textu:
+- Formát zadání: \`[AUTO_ODKAZY: Fráze1|URL1, Fráze2|URL2, ...]\`
+- Vlož odkaz ve formátu: \`<a href="URL">Fráze</a>\`
+- Každou frázi linkuj POUZE JEDNOU (první přirozený výskyt)
+- Odkaz musí dávat smysl v kontextu věty
+- Linkuj PŘIROZENĚ - text musí být primárně pro čtenáře, ne pro SEO
+- Neobětuj čitelnost textu kvůli odkazům
+- Pokud fráze nepasuje přirozeně do textu, NELINKUJ JI
+
 ### Příklad ŠPATNÉHO výstupu (bez HTML):
 \`\`\`
 Luxusní šála ze 100% kašmíru v elegantní černé barvě. Měří 35×175 cm...
@@ -200,12 +212,13 @@ Použij \`<strong>\` tagy střídmě – max 2–3 v odstavci.
  * Generate short description for a product
  */
 export async function generateShortDescription(
-  productName: string,
-  longDescription: string,
-  existingShortDescription: string,
+  product: Product,
   settings: ShortDescriptionSettings,
   onRateLimitWait?: (waitSeconds: number, attempt: number, maxAttempts: number) => void
 ): Promise<APIResponse> {
+  const productName = product.name || 'Bez názvu';
+  const longDescription = product.description || '';
+  const existingShortDescription = product.shortDescription || '';
   const shortDescDisplay = existingShortDescription?.trim() || '(prázdný)';
 
   let userMessage = '';
@@ -231,6 +244,44 @@ export async function generateShortDescription(
   // Add link phrases if enabled
   if (settings.useLinkPhrases && settings.linkPhrases.trim()) {
     userMessage += `[FRAZE_PRO_PROLINKOVÁNÍ: ${settings.linkPhrases.trim()}]\n\n`;
+  }
+
+  // Add auto-linking if enabled and CSV data is loaded
+  console.log('[ShortDesc] Auto-linking check:', {
+    enabled: settings.autoLinking?.enabled,
+    brandEntriesCount: settings.autoLinking?.brandEntries?.length || 0,
+    categoryEntriesCount: settings.autoLinking?.categoryEntries?.length || 0,
+    linkManufacturer: settings.autoLinking?.linkManufacturer,
+    linkMainCategory: settings.autoLinking?.linkMainCategory,
+    linkLowestCategory: settings.autoLinking?.linkLowestCategory,
+  });
+
+  if (settings.autoLinking?.enabled) {
+    const hasBrands = (settings.autoLinking.brandEntries?.length || 0) > 0;
+    const hasCategories = (settings.autoLinking.categoryEntries?.length || 0) > 0;
+
+    if (hasBrands || hasCategories) {
+      const links = getLinksForProduct(
+        product,
+        settings.autoLinking.brandEntries || [],
+        settings.autoLinking.categoryEntries || [],
+        {
+          linkManufacturer: settings.autoLinking.linkManufacturer,
+          linkMainCategory: settings.autoLinking.linkMainCategory,
+          linkLowestCategory: settings.autoLinking.linkLowestCategory,
+        }
+      );
+
+      console.log('[ShortDesc] Links found:', links);
+
+      if (links.length > 0) {
+        const linkStrings = links.map(l => `${l.phrase}|${l.url}`);
+        userMessage += `[AUTO_ODKAZY: ${linkStrings.join(', ')}]\n\n`;
+        console.log('[ShortDesc] Adding to prompt:', `[AUTO_ODKAZY: ${linkStrings.join(', ')}]`);
+      }
+    }
+  } else {
+    console.log('[ShortDesc] Auto-linking disabled or not configured');
   }
 
   userMessage += `Název produktu: ${productName}

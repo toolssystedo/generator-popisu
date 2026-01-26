@@ -139,8 +139,10 @@ export async function readFileForShortDescriptions(file: File): Promise<{
         const descIdx = headers.indexOf('description');
         const shortDescIdx = headers.indexOf('shortdescription');
         const imageIdx = headers.indexOf('image');
+        const manufacturerIdx = headers.indexOf('manufacturer');
+        const categoryTextIdx = headers.indexOf('categorytext');
 
-        console.log('[SHORT DESC] Index sloupců - code:', codeIdx, 'name:', nameIdx, 'description:', descIdx, 'shortDescription:', shortDescIdx);
+        console.log('[SHORT DESC] Index sloupců - code:', codeIdx, 'name:', nameIdx, 'description:', descIdx, 'shortDescription:', shortDescIdx, 'manufacturer:', manufacturerIdx, 'categoryText:', categoryTextIdx);
 
         // Transform to Product array with original row preserved
         const products: Product[] = [];
@@ -154,6 +156,8 @@ export async function readFileForShortDescriptions(file: File): Promise<{
             description: row[descIdx] ? String(row[descIdx]).trim() : '',
             shortDescription: row[shortDescIdx] ? String(row[shortDescIdx]).trim() : '',
             image: imageIdx >= 0 && row[imageIdx] ? String(row[imageIdx]).trim() : '',
+            manufacturer: manufacturerIdx >= 0 && row[manufacturerIdx] ? String(row[manufacturerIdx]).trim() : '',
+            categoryText: categoryTextIdx >= 0 && row[categoryTextIdx] ? String(row[categoryTextIdx]).trim() : '',
             _originalRow: row
           });
           products.push(product);
@@ -229,8 +233,10 @@ export async function readFileForLongDescriptions(file: File): Promise<{
         const descIdx = headers.indexOf('description');
         const shortDescIdx = headers.indexOf('shortdescription');
         const imageIdx = headers.indexOf('image');
+        const manufacturerIdx = headers.indexOf('manufacturer');
+        const categoryTextIdx = headers.indexOf('categorytext');
 
-        console.log('[LONG DESC] Index sloupců - code:', codeIdx, 'name:', nameIdx, 'description:', descIdx, 'shortDescription:', shortDescIdx);
+        console.log('[LONG DESC] Index sloupců - code:', codeIdx, 'name:', nameIdx, 'description:', descIdx, 'shortDescription:', shortDescIdx, 'manufacturer:', manufacturerIdx, 'categoryText:', categoryTextIdx);
 
         // Find all image columns (image, image2, image3, ...) but NOT defaultImage
         const imageColumnIndices: number[] = [];
@@ -271,6 +277,8 @@ export async function readFileForLongDescriptions(file: File): Promise<{
             description: row[descIdx] ? String(row[descIdx]).trim() : '',
             shortDescription: row[shortDescIdx] ? String(row[shortDescIdx]).trim() : '',
             image: originalImage,
+            manufacturer: manufacturerIdx >= 0 && row[manufacturerIdx] ? String(row[manufacturerIdx]).trim() : '',
+            categoryText: categoryTextIdx >= 0 && row[categoryTextIdx] ? String(row[categoryTextIdx]).trim() : '',
             _allImages: imageUrls.join(', '),
             _originalRow: row
           };

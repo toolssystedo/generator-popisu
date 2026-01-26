@@ -178,9 +178,7 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
 
       // Generate description via API
       const result = await generateShortDescription(
-        productName,
-        product.description,
-        product.shortDescription || '',
+        product,
         settings,
         (waitSeconds, attempt, maxAttempts) => {
           get().addLogEntry(`Rate limit - čekám ${waitSeconds}s (pokus ${attempt}/${maxAttempts})...`, 'warning');

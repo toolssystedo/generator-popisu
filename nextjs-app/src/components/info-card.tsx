@@ -17,45 +17,57 @@ const shortModeSteps: Step[] = [
   {
     title: 'Nahrajte XLSX export ze Shoptetu',
     descriptions: [
-      { text: 'Soubor musí obsahovat sloupce: code, name, description, shortDescription' },
+      { text: 'Povinne sloupce: code, name, description, shortDescription' },
+      { text: 'Volitelne: manufacturer, categoryText (pro prolinkovani)' },
       {
-        text: 'Pro zobrazení šablony exportu klikněte',
+        text: 'Pro zobrazeni sablony exportu kliknete',
         link: { text: 'zde', image: '/assets/sablona-exportu.jpg' }
       },
-      { text: 'Další věci v exportu nepotřebujete, čím více věcí tam bude, tím více se toho může rozbít.' },
     ],
   },
   {
-    title: 'Zadejte API klíč (Anthropic)',
+    title: 'Nahrajte CSV pro prolinkovani (volitelne)',
     descriptions: [
-      { text: 'API klíč získáte na console.anthropic.com' },
-    ],
-  },
-  {
-    title: 'Spusťte automatické zpracování',
-    descriptions: [
-      { text: 'AI vygeneruje krátké popisy z dlouhých popisů produktů' },
-    ],
-  },
-  {
-    title: 'Stáhněte upravený soubor',
-    descriptions: [
-      { text: 'Soubor obsahuje nově vygenerované krátké popisy ve sloupci shortDescription' },
-    ],
-  },
-  {
-    title: 'Naimportujte upravený soubor',
-    descriptions: [
-      { text: '1. V levém menu otevřete "Produkty" a "Import"' },
       {
-        text: '2. V otevřeném importu v případě potřeby změňte nastavení',
-        link: { text: 'podle návodu', image: '/assets/import-produktu.jpg' }
+        text: 'CSV se znackami (sloupce: Name, indexName) - cestu k exportu zobrazite',
+        link: { text: 'zde', image: '/assets/export-znacky.png' }
       },
-      { text: '3. Vyberte nově stažený soubor a v horní části pomocí tlačítka "Import" naimportujte' },
       {
-        text: 'Pro zobrazení návodu klikněte',
-        link: { text: 'zde', image: '/assets/import-produktu.jpg' }
+        text: 'CSV s kategoriemi (sloupce: Title, url) - cestu k exportu zobrazite',
+        link: { text: 'zde', image: '/assets/export-kategorie.png' }
       },
+    ],
+  },
+  {
+    title: 'Nastavte generovani',
+    descriptions: [
+      { text: 'Zarovnani textu, odrazky s benefity' },
+      { text: 'Prolinkovani znacek a kategorii' },
+      { text: 'Ton popisu (neutralni, profesionalni, vtipny)' },
+    ],
+  },
+  {
+    title: 'Spustte zpracovani',
+    descriptions: [
+      { text: 'AI vygeneruje kratke popisy z dlouhych popisu produktu' },
+      { text: 'Odkazy na znacky a kategorie budou automaticky vlozeny' },
+    ],
+  },
+  {
+    title: 'Stahnete upraveny soubor',
+    descriptions: [
+      { text: 'Soubor obsahuje nove kratke popisy ve sloupci shortDescription' },
+    ],
+  },
+  {
+    title: 'Naimportujte do Shoptetu',
+    descriptions: [
+      { text: '1. V levem menu otevrete "Produkty" a "Import"' },
+      {
+        text: '2. V otevrenem importu v pripade potreby zmente nastaveni',
+        link: { text: 'podle navodu', image: '/assets/import-produktu.jpg' }
+      },
+      { text: '3. Vyberte nove stazeny soubor a naimportujte' },
     ],
   },
 ];
@@ -64,32 +76,54 @@ const longModeSteps: Step[] = [
   {
     title: 'Nahrajte XLSX export ze Shoptetu',
     descriptions: [
-      { text: 'Soubor musí obsahovat sloupce: code, name, description, shortDescription' },
-      { text: 'Volitelně může obsahovat sloupec image s URL obrázku produktu' },
+      { text: 'Povinne sloupce: code, name, description, shortDescription' },
+      { text: 'Volitelne: manufacturer, categoryText (pro prolinkovani)' },
+      { text: 'Volitelne: image, image2, image3... (pro vkladani obrazku)' },
     ],
   },
   {
-    title: 'Zadejte API klíč (Anthropic)',
+    title: 'Nahrajte CSV pro prolinkovani (volitelne)',
     descriptions: [
-      { text: 'API klíč získáte na console.anthropic.com' },
+      {
+        text: 'CSV se znackami (sloupce: Name, indexName) - cestu k exportu zobrazite',
+        link: { text: 'zde', image: '/assets/export-znacky.png' }
+      },
+      {
+        text: 'CSV s kategoriemi (sloupce: Title, url) - cestu k exportu zobrazite',
+        link: { text: 'zde', image: '/assets/export-kategorie.png' }
+      },
     ],
   },
   {
-    title: 'Nastavte možnosti generování',
+    title: 'Nastavte generovani',
     descriptions: [
-      { text: 'Zvolte tón, zda přidávat obrázky a další nastavení' },
+      { text: 'Zarovnani textu, vkladani obrazku (1/2/3 na radek)' },
+      { text: 'Prolinkovani znacek a kategorii' },
+      { text: 'Ton popisu (neutralni, profesionalni, vtipny)' },
     ],
   },
   {
-    title: 'Spusťte automatické zpracování',
+    title: 'Spustte zpracovani',
     descriptions: [
-      { text: 'AI vygeneruje dlouhé popisy z krátkých popisů a názvů produktů' },
+      { text: 'AI vygeneruje dlouhe popisy s obrazky a odkazy' },
+      { text: 'Obrazky budou rovnomerne rozlozeny v textu' },
     ],
   },
   {
-    title: 'Stáhněte upravený soubor',
+    title: 'Stahnete upraveny soubor',
     descriptions: [
-      { text: 'Originální popis bude uložen do sloupce originalDescription' },
+      { text: 'Soubor obsahuje nove dlouhe popisy ve sloupci description' },
+    ],
+  },
+  {
+    title: 'Naimportujte do Shoptetu',
+    descriptions: [
+      { text: '1. V levem menu otevrete "Produkty" a "Import"' },
+      {
+        text: '2. V otevrenem importu v pripade potreby zmente nastaveni',
+        link: { text: 'podle navodu', image: '/assets/import-produktu.jpg' }
+      },
+      { text: '3. Vyberte nove stazeny soubor a naimportujte' },
     ],
   },
 ];
