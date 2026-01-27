@@ -28,6 +28,7 @@ const shortModeSteps: Step[] = [
   {
     title: 'Nahrajte CSV pro prolinkovani (volitelne)',
     descriptions: [
+      { text: 'Prolinkovani automaticky vlozi do popisu odkazy na stranky znacek a kategorii vaseho e-shopu. Zlepsuje to SEO a usnadnuje zakaznikum navigaci.' },
       {
         text: 'CSV se znackami (sloupce: Name, indexName) - cestu k exportu zobrazite',
         link: { text: 'zde', image: '/assets/export-znacky.png' }
@@ -84,6 +85,7 @@ const longModeSteps: Step[] = [
   {
     title: 'Nahrajte CSV pro prolinkovani (volitelne)',
     descriptions: [
+      { text: 'Prolinkovani automaticky vlozi do popisu odkazy na stranky znacek a kategorii vaseho e-shopu. Zlepsuje to SEO a usnadnuje zakaznikum navigaci.' },
       {
         text: 'CSV se znackami (sloupce: Name, indexName) - cestu k exportu zobrazite',
         link: { text: 'zde', image: '/assets/export-znacky.png' }

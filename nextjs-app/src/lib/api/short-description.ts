@@ -210,11 +210,16 @@ Použij \`<strong>\` tagy střídmě – max 2–3 v odstavci.
 
 /**
  * Generate short description for a product
+ * @param product - Product to generate description for
+ * @param settings - Generation settings
+ * @param onRateLimitWait - Callback for rate limit waiting
+ * @param onlyFromShort - If true, long description is missing/too short, generate only from short description
  */
 export async function generateShortDescription(
   product: Product,
   settings: ShortDescriptionSettings,
-  onRateLimitWait?: (waitSeconds: number, attempt: number, maxAttempts: number) => void
+  onRateLimitWait?: (waitSeconds: number, attempt: number, maxAttempts: number) => void,
+  onlyFromShort: boolean = false
 ): Promise<APIResponse> {
   const productName = product.name || 'Bez názvu';
   const longDescription = product.description || '';
@@ -284,13 +289,31 @@ export async function generateShortDescription(
     console.log('[ShortDesc] Auto-linking disabled or not configured');
   }
 
+  // Add special instruction if long description is missing
+  if (onlyFromShort) {
+    userMessage += `[BEZ_DLOUHEHO_POPISU]
+POZOR: Tento produkt nemá dlouhý popis. Pracuj POUZE s názvem produktu a stávajícím krátkým popisem.
+- NEVYMÝŠLEJ SI informace, které nejsou v podkladech
+- Vylepši styl a formátování stávajícího krátkého popisu
+- Přidej HTML formátování (<strong> tagy) pro klíčové informace
+- Pokud je krátký popis příliš strohý, můžeš ho mírně rozšířit, ale POUZE na základě toho, co je v názvu a krátkém popisu
+- Raději napiš kratší, ale pravdivý popis než delší s vymyšlenými informacemi
+
+`;
+  }
+
   userMessage += `Název produktu: ${productName}
 
 Stávající krátký popis:
-${shortDescDisplay}
+${shortDescDisplay}`;
+
+  // Only add long description if it exists and we're not in "only short" mode
+  if (!onlyFromShort && longDescription.trim()) {
+    userMessage += `
 
 Dlouhý popis:
 ${longDescription}`;
+  }
 
   // Add bullet points flag if enabled
   if (settings.addBulletPoints) {

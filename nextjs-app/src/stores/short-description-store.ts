@@ -54,8 +54,10 @@ interface ShortDescriptionState {
 
 const initialResults: ShortDescriptionResults = {
   success: 0,
+  successFromShortOnly: 0,
   skippedEmpty: 0,
   skippedShort: 0,
+  skippedNoInfo: 0,
   errors: 0,
 };
 
@@ -117,9 +119,10 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
       return;
     }
 
-    // Check if there are any processable products
-    if (state.stats?.processable === 0) {
-      set({ error: 'Žádné produkty nelze zpracovat. Všechny produkty mají prázdný nebo příliš krátký dlouhý popis.' });
+    // Check if there are any processable products (either with long desc or short desc only)
+    const totalProcessable = (state.stats?.processable || 0) + (state.stats?.processableFromShort || 0);
+    if (totalProcessable === 0) {
+      set({ error: 'Žádné produkty nelze zpracovat. Produkty musí mít buď dlouhý popis (100+ znaků) nebo alespoň krátký popis (30+ znaků).' });
       return;
     }
 
@@ -162,27 +165,31 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
 
       // Check if product can be processed
       const checkResult = canProcessProductShort(product);
+      const isOnlyShort = checkResult.reason === 'only_short';
 
       if (!checkResult.canProcess) {
-        if (checkResult.reason === 'empty') {
-          results.skippedEmpty++;
-          get().addLogEntry(`Přeskočeno (prázdný popis): ${productCode} - ${productName}`, 'warning');
-        } else if (checkResult.reason === 'short') {
-          results.skippedShort++;
-          get().addLogEntry(`Přeskočeno (krátký popis <100 znaků): ${productCode} - ${productName}`, 'warning');
+        if (checkResult.reason === 'no_info') {
+          results.skippedNoInfo++;
+          get().addLogEntry(`Přeskočeno (chybí dlouhý i krátký popis): ${productCode} - ${productName}`, 'warning');
         }
         processed++;
         set({ results: { ...results } });
         continue;
       }
 
-      // Generate description via API
+      // Log info about processing mode
+      if (isOnlyShort) {
+        get().addLogEntry(`Zpracovávám pouze z krátkého popisu: ${productCode} - ${productName}`, 'info');
+      }
+
+      // Generate description via API (pass info about missing long description)
       const result = await generateShortDescription(
         product,
         settings,
         (waitSeconds, attempt, maxAttempts) => {
           get().addLogEntry(`Rate limit - čekám ${waitSeconds}s (pokus ${attempt}/${maxAttempts})...`, 'warning');
-        }
+        },
+        isOnlyShort  // New parameter: indicates missing long description
       );
 
       if (result.success && result.description) {
@@ -197,8 +204,14 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
 
         // Update product with new short description
         products[i].shortDescription = finalDescription;
-        results.success++;
-        get().addLogEntry(`Úspěšně zpracováno: ${productCode} - ${productName}`, 'success');
+
+        if (isOnlyShort) {
+          results.successFromShortOnly++;
+          get().addLogEntry(`Úspěšně zpracováno (jen z krátkého): ${productCode} - ${productName}`, 'success');
+        } else {
+          results.success++;
+          get().addLogEntry(`Úspěšně zpracováno: ${productCode} - ${productName}`, 'success');
+        }
 
         // Add to preview (max 10 items)
         if (previewItems.length < 10) {
@@ -235,7 +248,24 @@ export const useShortDescriptionStore = create<ShortDescriptionState>((set, get)
       }
     }
 
-    // Processing complete
+    // Processing complete - add summary logs
+    if (!get().isCancelled) {
+      const totalSuccess = results.success + results.successFromShortOnly;
+      get().addLogEntry(`✅ Zpracováno: ${totalSuccess} produktů`, 'success');
+
+      if (results.successFromShortOnly > 0) {
+        get().addLogEntry(`⚠️ Zpracováno bez dlouhého popisu: ${results.successFromShortOnly} produktů`, 'warning');
+      }
+
+      if (results.skippedNoInfo > 0) {
+        get().addLogEntry(`❌ Přeskočeno (nedostatek informací): ${results.skippedNoInfo} produktů`, 'warning');
+      }
+
+      if (results.errors > 0) {
+        get().addLogEntry(`❌ Chyby: ${results.errors} produktů`, 'error');
+      }
+    }
+
     set({
       processingState: get().isCancelled ? 'cancelled' : 'completed',
       processedData: products,

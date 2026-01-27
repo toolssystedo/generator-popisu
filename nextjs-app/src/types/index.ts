@@ -48,9 +48,11 @@ export interface LinkToInsert {
 export interface ShortDescriptionStats {
   total: number;
   withDescription: number;
-  processable: number;
+  processable: number;              // Má dlouhý popis 100+ znaků
+  processableFromShort: number;     // Nemá dlouhý popis, ale má krátký 30+ znaků
   emptyDescription: number;
   shortDescription: number;
+  notProcessable: number;           // Nemá ani dlouhý ani krátký popis
 }
 
 // Statistics for long description mode
@@ -64,8 +66,10 @@ export interface LongDescriptionStats {
 // Processing results for short descriptions
 export interface ShortDescriptionResults {
   success: number;
+  successFromShortOnly: number;     // Úspěšně zpracováno jen z krátkého popisu
   skippedEmpty: number;
   skippedShort: number;
+  skippedNoInfo: number;            // Přeskočeno - chybí dlouhý i krátký popis
   errors: number;
 }
 

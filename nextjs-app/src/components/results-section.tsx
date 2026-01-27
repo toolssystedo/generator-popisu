@@ -34,14 +34,18 @@ export function ResultsSection({
       {/* Results grid */}
       <div className={`grid gap-4 mb-6 ${isShortMode ? 'grid-cols-3' : 'grid-cols-4'}`}>
         <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-          <span className="block text-2xl font-bold text-green-600 dark:text-green-400">{results.success}</span>
+          <span className="block text-2xl font-bold text-green-600 dark:text-green-400">
+            {isShortMode ? shortResults.success + (shortResults.successFromShortOnly || 0) : results.success}
+          </span>
           <span className="text-xs text-[var(--text-muted)]">Uspesne</span>
         </div>
 
         {isShortMode ? (
           <>
             <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
-              <span className="block text-2xl font-bold text-orange-600 dark:text-orange-400">{shortResults.skippedEmpty + shortResults.skippedShort}</span>
+              <span className="block text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {shortResults.skippedEmpty + shortResults.skippedShort + (shortResults.skippedNoInfo || 0)}
+              </span>
               <span className="text-xs text-[var(--text-muted)]">Preskoceno</span>
             </div>
           </>

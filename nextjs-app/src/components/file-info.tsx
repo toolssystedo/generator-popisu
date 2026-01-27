@@ -59,13 +59,18 @@ export function FileInfo({ fileName, stats, mode, onRemove }: FileInfoProps) {
       </div>
 
       {/* Stats Grid */}
-      <div className={`grid gap-4 ${isShortMode ? 'grid-cols-3' : 'grid-cols-4'}`}>
+      <div className={`grid gap-4 ${isShortMode ? 'grid-cols-4' : 'grid-cols-4'}`}>
         <StatItem label="Celkem" value={stats.total} />
 
         {isShortMode ? (
           <>
-            <StatItem label="S popisem" value={shortStats.withDescription} />
-            <StatItem label="Ke zpracování" value={shortStats.processable} highlight />
+            <StatItem label="S dlouhým popisem" value={shortStats.processable} />
+            <StatItem label="Jen s krátkým" value={shortStats.processableFromShort || 0} />
+            <StatItem
+              label="Ke zpracování"
+              value={shortStats.processable + (shortStats.processableFromShort || 0)}
+              highlight
+            />
           </>
         ) : (
           <>
@@ -76,11 +81,23 @@ export function FileInfo({ fileName, stats, mode, onRemove }: FileInfoProps) {
         )}
       </div>
 
-      {stats.processable === 0 && (
+      {/* Warning for short mode when some products only have short description */}
+      {isShortMode && (shortStats.processableFromShort || 0) > 0 && (
+        <p className="text-sm text-amber-600 dark:text-amber-400 mt-3">
+          {shortStats.processableFromShort} produkt(ů) nemá dlouhý popis - krátký popis bude vylepšen pouze na základě stávajících informací.
+        </p>
+      )}
+
+      {/* Error when no products can be processed */}
+      {isShortMode && shortStats.processable + (shortStats.processableFromShort || 0) === 0 && (
         <p className="text-sm text-red-600 dark:text-red-400 mt-3">
-          {isShortMode
-            ? 'Žádné produkty nelze zpracovat. Produkty musí mít dlouhý popis s alespoň 100 znaky.'
-            : 'Žádné produkty nelze zpracovat. Produkty musí mít název a krátký popis (min. 20 znaků).'}
+          Žádné produkty nelze zpracovat. Produkty musí mít buď dlouhý popis (100+ znaků) nebo alespoň krátký popis (30+ znaků).
+        </p>
+      )}
+
+      {!isShortMode && longStats.processable === 0 && (
+        <p className="text-sm text-red-600 dark:text-red-400 mt-3">
+          Žádné produkty nelze zpracovat. Produkty musí mít název a krátký popis (min. 20 znaků).
         </p>
       )}
     </div>

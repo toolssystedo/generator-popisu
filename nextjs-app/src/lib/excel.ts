@@ -323,30 +323,51 @@ export async function readFileForLongDescriptions(file: File): Promise<{
 
 /**
  * Calculate statistics for short description mode
+ * Nová logika:
+ * - processable: má dlouhý popis 100+ znaků
+ * - processableFromShort: nemá dlouhý popis, ale má krátký 30+ znaků
+ * - notProcessable: nemá ani jedno
  */
 function calculateShortDescStats(data: Product[]): ShortDescriptionStats {
   const stats: ShortDescriptionStats = {
     total: data.length,
     withDescription: 0,
     processable: 0,
+    processableFromShort: 0,
     emptyDescription: 0,
-    shortDescription: 0
+    shortDescription: 0,
+    notProcessable: 0
   };
 
   data.forEach(row => {
     const description = row.description || '';
-    const plainText = stripHtml(description);
+    const shortDesc = row.shortDescription || '';
+    const plainLongText = stripHtml(description);
+    const plainShortText = stripHtml(shortDesc);
 
-    if (plainText.trim().length > 0) {
+    if (plainLongText.trim().length > 0) {
       stats.withDescription++;
 
-      if (plainText.length >= 100) {
+      if (plainLongText.length >= 100) {
+        // Má dlouhý popis 100+ znaků - zpracovatelné normálně
         stats.processable++;
       } else {
         stats.shortDescription++;
+        // Dlouhý popis je příliš krátký, ale možná má krátký popis
+        if (plainShortText.trim().length >= 30) {
+          stats.processableFromShort++;
+        } else {
+          stats.notProcessable++;
+        }
       }
     } else {
       stats.emptyDescription++;
+      // Nemá dlouhý popis, ale možná má krátký popis
+      if (plainShortText.trim().length >= 30) {
+        stats.processableFromShort++;
+      } else {
+        stats.notProcessable++;
+      }
     }
   });
 
@@ -355,20 +376,37 @@ function calculateShortDescStats(data: Product[]): ShortDescriptionStats {
 
 /**
  * Check if product can be processed for short descriptions
+ * Nová logika:
+ * - canProcess: true, reason: null = má dlouhý popis 100+ znaků
+ * - canProcess: true, reason: 'only_short' = nemá dlouhý, ale má krátký 30+ znaků
+ * - canProcess: false, reason: 'no_info' = nemá ani dlouhý ani krátký popis
  */
-export function canProcessProductShort(product: Product): { canProcess: boolean; reason: 'empty' | 'short' | null } {
+export function canProcessProductShort(product: Product): {
+  canProcess: boolean;
+  reason: 'empty' | 'short' | 'only_short' | 'no_info' | null
+} {
   const description = product.description || '';
-  const plainText = stripHtml(description);
+  const shortDesc = product.shortDescription || '';
+  const plainLongText = stripHtml(description);
+  const plainShortText = stripHtml(shortDesc);
 
-  if (plainText.trim().length === 0) {
-    return { canProcess: false, reason: 'empty' };
+  // 1. Má dlouhý popis 100+ znaků -> zpracuj normálně
+  if (plainLongText.trim().length >= 100) {
+    return { canProcess: true, reason: null };
   }
 
-  if (plainText.length < 100) {
-    return { canProcess: false, reason: 'short' };
+  // 2. Nemá dlouhý popis (nebo je příliš krátký), ale má krátký popis 30+ znaků
+  if (plainShortText.trim().length >= 30) {
+    return { canProcess: true, reason: 'only_short' };
   }
 
-  return { canProcess: true, reason: null };
+  // 3. Nemá ani dlouhý ani krátký popis - přeskoč
+  if (plainLongText.trim().length === 0) {
+    return { canProcess: false, reason: 'no_info' };
+  }
+
+  // 4. Má krátký dlouhý popis (<100), ale nemá krátký popis - přeskoč
+  return { canProcess: false, reason: 'no_info' };
 }
 
 /**
