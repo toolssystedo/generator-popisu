@@ -21,7 +21,7 @@ export function PreviewModal({ open, onOpenChange, items, mode }: PreviewModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[84rem] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Náhled vygenerovaných popisů ({items.length})

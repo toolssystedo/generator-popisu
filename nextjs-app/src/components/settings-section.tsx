@@ -52,9 +52,6 @@ export function SettingsSection(props: SettingsSectionProps) {
     const storedJustify = localStorage.getItem(`${prefix}justify_text`) === 'true';
     const storedTone = (localStorage.getItem(`${prefix}tone_selection`) || 'neutral') as ToneOption;
     const storedCustomTone = localStorage.getItem(`${prefix}custom_tone_example`) || '';
-    const storedUseLinkPhrases = localStorage.getItem(`${prefix}use_link_phrases`) === 'true';
-    const storedLinkPhrases = localStorage.getItem(`${prefix}link_phrases`) || '';
-
     if (isShortMode) {
       const storedBulletPoints = localStorage.getItem('add_bullet_points') === 'true';
       const storedLinkManufacturer = localStorage.getItem('short_link_manufacturer') !== 'false';
@@ -63,8 +60,6 @@ export function SettingsSection(props: SettingsSectionProps) {
       (onChange as (s: ShortDescriptionSettings) => void)({
         justifyText: storedJustify,
         addBulletPoints: storedBulletPoints,
-        useLinkPhrases: storedUseLinkPhrases,
-        linkPhrases: storedLinkPhrases,
         tone: storedTone,
         customToneExample: storedCustomTone,
         autoLinking: {
@@ -113,8 +108,6 @@ export function SettingsSection(props: SettingsSectionProps) {
       : key === 'addImages' ? 'long_add_images'
       : key === 'imageLayout' ? 'long_image_layout'
       : key === 'leftoverImages' ? 'long_leftover_images'
-      : key === 'useLinkPhrases' ? `${prefix}use_link_phrases`
-      : key === 'linkPhrases' ? `${prefix}link_phrases`
       : key === 'tone' ? `${prefix}tone_selection`
       : key === 'customToneExample' ? `${prefix}custom_tone_example`
       : `${prefix}justify_text`;
@@ -396,41 +389,6 @@ export function SettingsSection(props: SettingsSectionProps) {
           </div>
         )}
       </div>
-
-      {/* Link Phrases Section - Short mode only */}
-      {isShortMode && (
-        <div className="pt-4 border-t border-[var(--border-color)]">
-          <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Prolinkovat fraze</h4>
-
-          <label className="flex flex-wrap items-center gap-2 p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg cursor-pointer transition-colors hover:border-[var(--brand-green-lighter)] hover:bg-[var(--brand-green-50)] dark:hover:bg-[#2d3d3c]">
-            <input
-              type="checkbox"
-              checked={settings.useLinkPhrases}
-              onChange={(e) => updateSetting('useLinkPhrases', e.target.checked)}
-              className="accent-[var(--brand-green)]"
-            />
-            <span className="font-medium text-[var(--text-secondary)]">Pouzit fraze pro prolinkovani</span>
-            <span className="text-sm text-[var(--text-muted)]">(AI zakomponuje fraze prirozene do textu)</span>
-          </label>
-
-          {settings.useLinkPhrases && (
-            <div className="mt-3 p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg">
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
-                Fraze oddelene carkou:
-              </label>
-              <textarea
-                value={settings.linkPhrases}
-                onChange={(e) => updateSetting('linkPhrases', e.target.value)}
-                placeholder="Teplaky, Mikiny, Tenisky..."
-                className="w-full min-h-16 p-3 border border-[var(--border-color)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] resize-y focus:outline-none focus:border-[var(--brand-green)] focus-brand"
-              />
-              <p className="mt-2 text-xs text-[var(--text-muted)]">
-                AI zakomponuje tyto fraze prirozene do textu, pokud souvisi s produktem.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Auto-Linking Section */}
       <div className="pt-4 border-t border-[var(--border-color)]">

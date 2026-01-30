@@ -111,8 +111,6 @@ export type LeftoverImagesOption = 'skip' | 'spaced';
 export interface ShortDescriptionSettings {
   justifyText: boolean;
   addBulletPoints: boolean;
-  useLinkPhrases: boolean;
-  linkPhrases: string;
   tone: ToneOption;
   customToneExample: string;
   // Auto-linking settings

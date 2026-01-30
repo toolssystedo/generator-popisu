@@ -15,8 +15,6 @@ export function ShortDescriptionGenerator() {
   const [settings, setSettings] = useState<ShortDescriptionSettings>({
     justifyText: false,
     addBulletPoints: false,
-    useLinkPhrases: false,
-    linkPhrases: '',
     tone: 'neutral',
     customToneExample: '',
     autoLinking: {

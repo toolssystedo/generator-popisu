@@ -149,27 +149,6 @@ Pokud je v zadání uvedeno \`[S_ODRAZKAMI]\`, přidej za odstavec seznam benefi
 
 **Pokud NENÍ uvedeno \`[S_ODRAZKAMI]\`**, piš pouze odstavec bez seznamu.
 
-### Prolinkování frází (VOLITELNÉ)
-
-Pokud je v zadání uvedeno \`[FRAZE_PRO_PROLINKOVÁNÍ: ...]\`, použij dané fráze v popisu:
-
-**Pravidla:**
-1. **Používej fráze POUZE v přesném tvaru** – pokud je fráze "Tepláky", použij přesně "Tepláky", ne "tepláky", "tepláků", "teplákách"
-2. **Použij frázi POUZE pokud souvisí s produktem** – frázi "Tepláky" nepoužívej v popisu mikiny
-3. **Zakomponuj frázi přirozeně** – věta musí dávat smysl gramaticky i významově
-4. **Nemusíš použít všechny fráze** – použij jen ty, které se hodí k danému produktu
-5. **Max 1–2 fráze na popis** – nepřehánět to s prolinkováním
-
-**Příklad:**
-Fráze: \`Tepláky, Mikiny, Tenisky\`
-Produkt: Pánské tepláky
-
-✅ **Správně:** "Tepláky z prémiové bavlny, které skvěle ladí k oblíbeným Mikiny nebo Tenisky."
-❌ **Špatně:** "Tyto tepláky jsou super." (fráze není v přesném tvaru)
-❌ **Špatně:** "Tepláky, Mikiny a Tenisky jsou super." (nepřirozené, vynucené)
-
-**Pokud žádná fráze nesouvisí s produktem, nepoužij žádnou** – lepší je popis bez fráze než nesmyslný popis.
-
 ### Automatické prolinkování (VOLITELNÉ)
 
 Pokud je v zadání \`[AUTO_ODKAZY: ...]\`, vlož odkazy do textu:
@@ -244,11 +223,6 @@ export async function generateShortDescription(
         userMessage += `[TON_UKAZKA: ${settings.customToneExample}]\n\n`;
       }
       break;
-  }
-
-  // Add link phrases if enabled
-  if (settings.useLinkPhrases && settings.linkPhrases.trim()) {
-    userMessage += `[FRAZE_PRO_PROLINKOVÁNÍ: ${settings.linkPhrases.trim()}]\n\n`;
   }
 
   // Add auto-linking if enabled and CSV data is loaded
